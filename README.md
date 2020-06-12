@@ -9,7 +9,7 @@ KEY为16字节,应为包含4个int型数的int[]，一个int为4个字节
 #### 不同开发语言版本
 * XTea-Go     : go版本
 * XTea-Java   : Java版本  (Java 8)
-* XTea-Python : Python版本
+* XTea-Python : Python版本 (Python 3)
 
 #### 测试数据：
 ```

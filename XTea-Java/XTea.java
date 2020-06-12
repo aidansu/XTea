@@ -1,4 +1,4 @@
-package com.test;
+package com.aidansu;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -9,7 +9,7 @@ import java.util.Locale;
  * KEY为16字节,应为包含4个int型数的int[]，一个int为4个字节
  * 加密解密轮数应为8的倍数，推荐加密轮数为64轮
  *
- * @author : AIDAN
+ * @author : aidan
  * createTime : 2016-4-26
  */
 public class XTea {
@@ -31,40 +31,6 @@ public class XTea {
      * 算法给的标准值,不可以改
      */
     private final static int DELTA = 0x9e3779b9;
-
-    /**
-     * 加密[先GZIP压缩，再把字节数组转为16进制字符串，接着TEA加密，最后Base64编码]
-     *
-     * @param info 需加密内容
-     * @return String
-     */
-    public static String encryptByBase64Tea(String info) {
-        byte[] compressedBytes = info.getBytes(StandardCharsets.UTF_8);
-        String hexStr = bytes2hex( compressedBytes );
-        byte[] teaBytes = encryptByTea(  hexStr ) ;
-        Base64.Encoder encoder = Base64.getEncoder();
-        byte[] base64Bytes = encoder.encode(teaBytes);
-        return replacePlus(new String(base64Bytes,StandardCharsets.UTF_8));
-    }
-
-    /**
-     * 解密[先Base64解码，再TEA解密，接着把16进制字符串转为字节数组，最后解压]
-     *
-     * @param secretInfo 需解密内容
-     * @return String
-     */
-    public static String decryptByBase64Tea( String secretInfo ){
-        String info = addPlus(secretInfo);
-        Base64.Decoder decoder = Base64.getDecoder();
-        byte[] decodeStr = decoder.decode(info);
-        String teaStr = decryptByTea( decodeStr );
-        byte[] hexBytes = hex2bytes(teaStr);
-        String str = null;
-        if(hexBytes.length > 0) {
-            str = new String(hexBytes, StandardCharsets.UTF_8);
-        }
-        return str;
-    }
 
     /**
      * 加密
@@ -269,7 +235,7 @@ public class XTea {
     }
 
     /**
-     * 替换+号，方便网络传输
+     * 把替换+号替换成%2B，方便网络传输
      *
      * @param paramTea 加密后的数据
      * @return String 完整的加密数据
@@ -283,7 +249,7 @@ public class XTea {
     }
 
     /**
-     * 替换%2b
+     * 把替换%2B替换成+号
      *
      * @param paramTea 解密前的数据
      * @return String 完整的加密数据
@@ -294,6 +260,40 @@ public class XTea {
             teaStr = paramTea.replace("%2B", "+");
         }
         return teaStr;
+    }
+
+    /**
+     * 加密[先GZIP压缩，再把字节数组转为16进制字符串，接着TEA加密，最后Base64编码]
+     *
+     * @param info 需加密内容
+     * @return String
+     */
+    public static String encryptByBase64Tea(String info) {
+        byte[] compressedBytes = info.getBytes(StandardCharsets.UTF_8);
+        String hexStr = bytes2hex( compressedBytes );
+        byte[] teaBytes = encryptByTea(  hexStr ) ;
+        Base64.Encoder encoder = Base64.getEncoder();
+        byte[] base64Bytes = encoder.encode(teaBytes);
+        return replacePlus(new String(base64Bytes,StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 解密[先Base64解码，再TEA解密，接着把16进制字符串转为字节数组，最后解压]
+     *
+     * @param secretInfo 需解密内容
+     * @return String
+     */
+    public static String decryptByBase64Tea( String secretInfo ){
+        String info = addPlus(secretInfo);
+        Base64.Decoder decoder = Base64.getDecoder();
+        byte[] decodeStr = decoder.decode(info);
+        String teaStr = decryptByTea( decodeStr );
+        byte[] hexBytes = hex2bytes(teaStr);
+        String str = null;
+        if(hexBytes.length > 0) {
+            str = new String(hexBytes, StandardCharsets.UTF_8);
+        }
+        return str;
     }
 
     public static void main(String[] args){

@@ -2,17 +2,28 @@
 from ctypes import c_int32
 import base64
 
+##
+# XTea算法
+# 每次操作可以处理8个字节数据
+# KEY为16字节,应为包含4个int型数的int[]，一个int为4个字节
+# 加密解密轮数应为8的倍数，推荐加密轮数为64轮
+# 
+# author : aidan
+# createTime : 2016-4-26
+# 
+
 #KEY
 key = [0x789f5645, 0xf68bd5a4,0x81963ffa, 0xabcdef12]
 #TIMES
 times = 32
+# 算法给的标准值,不可以改
+delta = 0x9E3779B9
 
 #Tea加密
 def encryptByTea(value,key,times):
-    y = c_int32(value[0]);
-    z = c_int32(value[1]);
-    sum = c_int32(0);
-    delta = 0x9E3779B9;
+    y = c_int32(value[0])
+    z = c_int32(value[1])
+    sum = c_int32(0)
     w = [0, 0]
     while (times > 0):
         sum.value += delta
@@ -25,10 +36,9 @@ def encryptByTea(value,key,times):
 
 #Tea解密
 def decryptByTea(value,key,times):
-    y = c_int32(value[0]);
-    z = c_int32(value[1]);
-    sum = c_int32(0);
-    delta = 0x9E3779B9;
+    y = c_int32(value[0])
+    z = c_int32(value[1])
+    sum = c_int32(0)
     if times == 32:
         sum = 0xC6EF3720
     elif times == 16:
@@ -39,28 +49,28 @@ def decryptByTea(value,key,times):
     while (times > 0):
         z.value -= ((y.value << 4) + key[2]) ^ (y.value + sum) ^ ((y.value >> 5) + key[3]);
         y.value -= ((z.value << 4) + key[0]) ^ (z.value + sum) ^ ((z.value >> 5) + key[1]);
-        sum -= delta;
-        times -= 1;
+        sum -= delta
+        times -= 1
     w[0] = y.value
     w[1] = z.value
     return w[0],w[1]
 
-#Int转Byte
+#int转byte
 def intToByte(content):
-    result = [];
+    result = []
     for i in range(0,len(content)):
         result.append((content[i] >> 24) & 0xff)
         result.append((content[i] >> 16) & 0xff)
         result.append((content[i] >> 8) & 0xff)
         result.append((content[i]) & 0xff)
-    return result;
+    return result
 
-#Byte转int
+#byte转int
 def byteToInt(content):
-    result = [];
+    result = []
     for i in range(0,len(content),4):
         result.append(content[i + 3] | content[i + 2] << 8 | content[i + 1] << 16 | content[i] << 24)
-    return result;
+    return result
 
 #字节数组转为16进制列表
 def bytes2hex(bs):
@@ -81,6 +91,7 @@ def hex2bytes(hex):
         val.append(int(hex[i:i+2],16))
     return val
 
+# 加密[先把字节数组转为16进制字符串，接着TEA加密，最后Base64编码,并把+号替换成%2B]
 def encryptByBase64Tea(message):
     # 转成bytes数组
     strByte = bytes(message, encoding="utf8")
@@ -91,7 +102,7 @@ def encryptByBase64Tea(message):
     #16进制字符串转字节数组
     str2Byte = bytes(hexStr, encoding="utf8")
     #str2Byte位数与它8的倍数的差
-    n = 8 - len(str2Byte) % 8;
+    n = 8 - len(str2Byte) % 8
     #若str2Byte的位数不足8的倍数,需要在list前填充位数，第一位为n,第2至n-1位为0
     beforeEncryptList = []
     for i in range(0,len(str2Byte)+n):
@@ -120,9 +131,10 @@ def encryptByBase64Tea(message):
     teaStr = base64Str[2:len(base64Str)-1].replace("+","%2B")
     return teaStr
 
+# 解密[先把%2B替换成+号，再TEA解密，接着把16进制字符串转为字节数组]
 def decryptByBase64Tea(message):
     #把%2B替换成+号
-    teaStr = message.replace("%2B","+");
+    teaStr = message.replace("%2B","+")
     #base64
     base64Bytes = base64.decodebytes(bytes(teaStr, encoding="utf8"))
     #字节数组转化成整型数组
@@ -142,7 +154,7 @@ def decryptByBase64Tea(message):
     deStr = hexBytes.decode('utf8')
     return deStr
 
-message = "XTea加密运算测试";
+message = "XTea加密运算测试"
 enTea = encryptByBase64Tea(message)
 print(enTea)
 deTea = decryptByBase64Tea(enTea)

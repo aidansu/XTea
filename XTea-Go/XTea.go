@@ -1,3 +1,12 @@
+//
+// XTea算法
+// 每次操作可以处理8个字节数据
+// KEY为16字节,应为包含4个int型数的int[]，一个int为4个字节
+// 加密解密轮数应为8的倍数，推荐加密轮数为64轮
+//
+// author : aidan
+// createTime : 2016-4-26
+//
 package main
 
 import (
@@ -15,12 +24,14 @@ var key = []int{0x789f5645, 0xf68bd5a4, 0x81963ffa, 0xabcdef12}
 // TIMES
 const times int = 32
 
+// 算法给的标准值,不可以改
+const delta int32 = -1640531527 //0x9E3779B9
+
 // Tea加密
 func encryptByTea(value []int, key []int, times int) (a int, b int) {
 	y := int32(value[0])
 	z := int32(value[1])
 	var sum int32
-	var delta int32 = -1640531527 //0x9E3779B9
 	for times > 0 {
 		sum += delta
 		y += ((z << 4) + int32(key[0])) ^ (z + sum) ^ ((z >> 5) + int32(key[1]))
@@ -37,7 +48,6 @@ func decryptByTea(value []int, key []int, times int) (a int, b int) {
 	y := int32(value[0])
 	z := int32(value[1])
 	var sum int32
-	var delta int32 = -1640531527 //0x9E3779B9
 	if times == 32 {
 		sum = -957401312 //0xC6EF3720
 	} else if times == 16 {
@@ -86,7 +96,7 @@ func hexToByte(hexStr string) []byte {
 	return byteValue
 }
 
-// Int转Byte
+// int转byte
 func intToByte(content []int) []byte {
 	var result []byte
 	for i := 0; i < len(content); i++ {
@@ -98,7 +108,7 @@ func intToByte(content []int) []byte {
 	return result
 }
 
-// Byte转Int
+// byte转int
 func byteToInt(content []byte) []int {
 	var result []int
 	for i := 0; i < len(content); i = i + 4 {
@@ -107,6 +117,7 @@ func byteToInt(content []byte) []int {
 	return result
 }
 
+// 加密[先把字节数组转为16进制字符串，接着TEA加密，最后Base64编码,并把+号替换成%2B]
 func encryptByBase64Tea(message string) (enTea string) {
 	// string转byte[]
 	xByte := []byte(message)
@@ -144,6 +155,7 @@ func encryptByBase64Tea(message string) (enTea string) {
 	return
 }
 
+// 解密[先把%2B替换成+号，再TEA解密，接着把16进制字符串转为字节数组]
 func decryptByBase64Tea(message string) (deTea string) {
 	// 把%2B替换成+号
 	teaStr := strings.Replace(message, "%2B", "+", -1)
